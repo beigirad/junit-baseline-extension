@@ -1,4 +1,4 @@
-package ir.beigirad.junit_baseline_extension
+package ir.beigirad.junitbaselineextension
 
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow

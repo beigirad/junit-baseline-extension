@@ -1,4 +1,4 @@
-package ir.beigirad.junit_baseline_extension
+package ir.beigirad.junitbaselineextension
 
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.AfterEachCallback

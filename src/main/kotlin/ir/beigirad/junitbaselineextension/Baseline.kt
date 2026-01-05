@@ -1,4 +1,4 @@
-package ir.beigirad.junit_baseline_extension
+package ir.beigirad.junitbaselineextension
 
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
@@ -6,7 +6,7 @@ import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.withClue
 import io.kotest.matchers.maps.shouldBeEmpty
 import io.kotest.matchers.maps.shouldContainExactly
-import ir.beigirad.junit_baseline_extension.BaselineExtension.Companion.ARG_RECORD
+import ir.beigirad.junitbaselineextension.BaselineExtension.Companion.ARG_RECORD
 import org.jetbrains.annotations.TestOnly
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
