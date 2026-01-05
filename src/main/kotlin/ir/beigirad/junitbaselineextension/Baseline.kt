@@ -17,6 +17,7 @@ import kotlin.io.path.writeText
 
 data class Baseline(
     private val projectRoot: Path,
+    private val baselineOutput: Path,
 ) {
     private val failures = ConcurrentHashMap<String, String>()
 
@@ -97,6 +98,6 @@ data class Baseline(
 
     private fun getBaselineFile(identifier: String): Path {
         val fileName = "baseline-${identifier.replace(" ", "-")}.json"
-        return projectRoot.resolve(fileName)
+        return baselineOutput.resolve(fileName)
     }
 }

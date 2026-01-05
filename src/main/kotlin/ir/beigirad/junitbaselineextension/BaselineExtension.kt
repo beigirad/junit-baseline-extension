@@ -8,9 +8,11 @@ import org.junit.jupiter.api.extension.TestExecutionExceptionHandler
 import kotlin.io.path.Path
 
 class BaselineExtension : TestExecutionExceptionHandler, AfterEachCallback, AfterAllCallback {
-    // used to remove environment-specific details from error messages
-    private var projectRootPath: String = System.getProperty("projectDir")
-    private val baseline = Baseline(projectRoot = Path(projectRootPath))
+    private val baseline = Baseline(
+        // used to remove environment-specific details from error messages
+        projectRoot = Path(System.getProperty("baseline.root")),
+        baselineOutput = Path(System.getProperty("baseline.output"))
+    )
 
     override fun handleTestExecutionException(context: ExtensionContext, throwable: Throwable) {
         // record test failures without throwing, for baseline comparison instead of `throw throwable`
@@ -54,6 +56,6 @@ class BaselineExtension : TestExecutionExceptionHandler, AfterEachCallback, Afte
             .any { it.value.contains(BaselineExtension::class) }
 
     companion object {
-        internal const val ARG_RECORD = "recordBaseline"
+        internal const val ARG_RECORD = "baseline.record"
     }
 }
