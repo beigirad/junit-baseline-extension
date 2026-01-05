@@ -10,6 +10,8 @@ repositories {
 }
 
 dependencies {
+    implementation("com.squareup.moshi:moshi:1.15.2")
+    implementation("io.kotest:kotest-runner-junit5:5.9.1")
     testImplementation(kotlin("test"))
 }
 
