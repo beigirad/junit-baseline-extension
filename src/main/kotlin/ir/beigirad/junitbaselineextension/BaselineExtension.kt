@@ -2,17 +2,32 @@ package ir.beigirad.junitbaselineextension
 
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.AfterEachCallback
+import org.junit.jupiter.api.extension.BeforeAllCallback
+import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler
 import kotlin.io.path.Path
 
-class BaselineExtension : TestExecutionExceptionHandler, AfterEachCallback, AfterAllCallback {
-    private val baseline = Baseline(
-        // used to remove environment-specific details from error messages
-        projectRoot = Path(System.getProperty("baseline.root")),
-        baselineOutput = Path(System.getProperty("baseline.output"))
-    )
+class BaselineExtension : TestExecutionExceptionHandler,
+    AfterEachCallback,
+    AfterAllCallback,
+    BeforeAllCallback,
+    BeforeEachCallback {
+    private lateinit var baseline: Baseline
+    private var isRecording: Boolean = false
+
+    override fun beforeAll(context: ExtensionContext) {
+        if (context.isNestedTestClass()) return
+
+        initialize(context)
+    }
+
+    override fun beforeEach(context: ExtensionContext) {
+        if (context.isAppliedByClass()) return
+
+        initialize(context)
+    }
 
     override fun handleTestExecutionException(context: ExtensionContext, throwable: Throwable) {
         // record test failures without throwing, for baseline comparison instead of `throw throwable`
@@ -25,7 +40,7 @@ class BaselineExtension : TestExecutionExceptionHandler, AfterEachCallback, Afte
 
         baseline.assertOrWrite(
             identifier = context.requiredTestClass.simpleName + "-" + context.requiredTestMethod.name.hashCode(),
-            recordMode = isRecordingBaseline()
+            recordMode = isRecording
         )
     }
 
@@ -35,12 +50,20 @@ class BaselineExtension : TestExecutionExceptionHandler, AfterEachCallback, Afte
 
         baseline.assertOrWrite(
             identifier = context.requiredTestClass.simpleName,
-            recordMode = isRecordingBaseline()
+            recordMode = isRecording
         )
     }
 
-    private fun isRecordingBaseline(): Boolean =
-        System.getProperty(ARG_RECORD) == "true"
+    private fun initialize(context: ExtensionContext) {
+        fun getProp(key: String) =
+            context.getConfigurationParameter(key).orElse(System.getProperty(key))
+
+        isRecording = getProp(ARG_RECORD) == "true"
+        baseline = Baseline(
+            projectRoot = Path(getProp("baseline.root")),
+            baselineOutput = Path(getProp("baseline.output"))
+        )
+    }
 
     private fun ExtensionContext.isNestedTestClass(): Boolean =
         parent.flatMap { it.testClass }
