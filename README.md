@@ -14,7 +14,7 @@ This is particularly useful for snapshot testing and ensuring that known failure
 ## Requirements
 
 - JDK 17 or higher
-- Kotlin 2.1.21
+- Kotlin 1.8.20 or higher
 - JUnit Jupiter 5.x
 
 ## Installation
@@ -72,28 +72,16 @@ class MyTest {
 
 The extension requires two configuration parameters:
 
-- **`baseline.root`**: The root directory of your project (used for path sanitization)
 - **`baseline.output`**: The directory where baseline files will be stored
+- **`baseline.root`**: The root directory of your project (used for path sanitization)
 - **`baseline.record`**: Set to `true` to record/update baselines, `false` to assert against them
 
-### Configuration via System Properties
+### Configuration via Gradle params
 
 ```bash
-./gradlew test -Dbaseline.root=/path/to/project \
-                -Dbaseline.output=/path/to/baselines \
+./gradlew test -Dbaseline.output=/path/to/baselines \ 
+                -Dbaseline.root=/path/to/project \
                 -Dbaseline.record=true
-```
-
-### Configuration via JUnit Parameters
-
-In `build.gradle.kts`:
-
-```kotlin
-tasks.test {
-    useJUnitPlatform()
-    systemProperty("baseline.root", projectDir.absolutePath)
-    systemProperty("baseline.output", file("baselines").absolutePath)
-}
 ```
 
 Or via `junit-platform.properties`:
@@ -103,6 +91,21 @@ baseline.root=/path/to/project
 baseline.output=/path/to/baselines
 baseline.record=false
 ```
+
+### Configuration via System Properties
+
+In `build.gradle.kts`:
+
+```kotlin
+tasks.test {
+   useJUnitPlatform()
+
+   systemProperty("baseline.output", projectDir.resolve("baseline").absolutePath)
+   systemProperty("baseline.root", rootDir.absolutePath)
+   systemProperty("baseline.record", true)
+}
+```
+
 
 ## Workflow
 
