@@ -1,19 +1,20 @@
 package ir.beigirad.junitbaselineextension
 
+import io.kotest.assertions.asClue
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.io.TempDir
 import org.junit.platform.engine.discovery.DiscoverySelectors
 import org.junit.platform.testkit.engine.EngineTestKit
 import java.nio.file.Path
+import java.nio.file.Paths
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.exists
 import kotlin.io.path.readText
-import kotlin.io.path.writeText
 
 class BaselineExtensionTest {
+    private val sampleBaselinePath = Paths.get("sample-baseline")
 
     @TempDir
     lateinit var rootPath: Path
@@ -24,7 +25,7 @@ class BaselineExtensionTest {
     @Test
     fun `should record baseline when record mode is true for class-level extension`() {
         val events = EngineTestKit.engine("junit-jupiter")
-            .selectors(DiscoverySelectors.selectClass(ClassLevelTest::class.java))
+            .selectors(DiscoverySelectors.selectClass(SampleClassLevelTest::class.java))
             .configurationParameter("baseline.root", rootPath.absolutePathString())
             .configurationParameter("baseline.output", baselinePath.absolutePathString())
             .configurationParameter("baseline.record", "true")
@@ -34,21 +35,18 @@ class BaselineExtensionTest {
             events.containerEvents().failed().count() shouldBe 0
         }
 
-        val baselineFile = baselinePath.resolve(ClassLevelTest.baselineFileName)
-        baselineFile.exists() shouldBe true
-
-        baselineFile.readText() shouldBe ClassLevelTest.baselineContent
+        baselinePath.resolve(SampleClassLevelTest.baselineFileName).asClue {
+            it.exists() shouldBe true
+            it.readText() shouldBe sampleBaselinePath.resolve(SampleClassLevelTest.baselineFileName).readText()
+        }
     }
 
     @Test
     fun `should assert against baseline when record mode is false for class-level extension`() {
-        val baselineFile = baselinePath.resolve(ClassLevelTest.baselineFileName)
-        baselineFile.writeText(ClassLevelTest.baselineContent)
-
         val events = EngineTestKit.engine("junit-jupiter")
-            .selectors(DiscoverySelectors.selectClass(ClassLevelTest::class.java))
+            .selectors(DiscoverySelectors.selectClass(SampleClassLevelTest::class.java))
             .configurationParameter("baseline.root", rootPath.absolutePathString())
-            .configurationParameter("baseline.output", baselinePath.absolutePathString())
+            .configurationParameter("baseline.output", sampleBaselinePath.absolutePathString())
             .execute()
 
         withClue(events.containerEvents().debug()) {
@@ -59,7 +57,7 @@ class BaselineExtensionTest {
     @Test
     fun `should record baseline when record mode is true for method-level extension`() {
         val events = EngineTestKit.engine("junit-jupiter")
-            .selectors(DiscoverySelectors.selectClass(MethodLevelTest::class.java))
+            .selectors(DiscoverySelectors.selectClass(SampleMethodLevelTest::class.java))
             .configurationParameter("baseline.root", rootPath.absolutePathString())
             .configurationParameter("baseline.output", baselinePath.absolutePathString())
             .configurationParameter("baseline.record", "true")
@@ -69,61 +67,22 @@ class BaselineExtensionTest {
             events.containerEvents().failed().count() shouldBe 0
         }
 
-        val baselineFile = baselinePath.resolve(MethodLevelTest.baselineFileName)
-        baselineFile.exists() shouldBe true
-
-        baselineFile.readText() shouldBe MethodLevelTest.baselineContent
+        baselinePath.resolve(SampleMethodLevelTest.baselineFileName).asClue {
+            it.exists() shouldBe true
+            it.readText() shouldBe sampleBaselinePath.resolve(SampleMethodLevelTest.baselineFileName).readText()
+        }
     }
 
     @Test
     fun `should assert against baseline when record mode is false for method-level extension`() {
-        val baselineFile = baselinePath.resolve(MethodLevelTest.baselineFileName)
-        baselineFile.writeText(MethodLevelTest.baselineContent)
-
         val events = EngineTestKit.engine("junit-jupiter")
-            .selectors(DiscoverySelectors.selectClass(MethodLevelTest::class.java))
+            .selectors(DiscoverySelectors.selectClass(SampleMethodLevelTest::class.java))
             .configurationParameter("baseline.root", rootPath.absolutePathString())
-            .configurationParameter("baseline.output", baselinePath.absolutePathString())
+            .configurationParameter("baseline.output", sampleBaselinePath.absolutePathString())
             .execute()
 
         withClue(events.containerEvents().debug()) {
             events.containerEvents().failed().count() shouldBe 0
         }
-    }
-}
-
-class MethodLevelTest {
-    companion object {
-        val baselineFileName = "baseline-MethodLevelTest-first.test.-218984446.json"
-        val baselineContent = """{"first test()":"First failure"}"""
-    }
-
-    @Test
-    @ExtendWith(BaselineExtension::class)
-    fun `first test`() {
-        throw AssertionError("First failure")
-    }
-
-    @Test
-    fun `second test`() {
-        throw AssertionError("Second failure")
-    }
-}
-
-@ExtendWith(BaselineExtension::class)
-class ClassLevelTest {
-    companion object {
-        val baselineFileName = "baseline-ClassLevelTest.json"
-        val baselineContent = """{"second test()":"Second failure","first test()":"First failure"}"""
-    }
-
-    @Test
-    fun `first test`() {
-        throw AssertionError("First failure")
-    }
-
-    @Test
-    fun `second test`() {
-        throw AssertionError("Second failure")
     }
 }

@@ -18,6 +18,9 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+    systemProperty("baseline.output", projectDir.resolve("sample-baseline").absolutePath)
+    systemProperty("baseline.root", projectDir.absolutePath)
+    systemProperty("baseline.record", false)
 }
 kotlin {
     jvmToolchain(17)
