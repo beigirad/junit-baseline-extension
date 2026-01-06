@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler
 import kotlin.io.path.Path
+import kotlin.text.filter
 
 class BaselineExtension : TestExecutionExceptionHandler,
     AfterEachCallback,
@@ -39,7 +40,7 @@ class BaselineExtension : TestExecutionExceptionHandler,
         if (context.isAppliedByClass()) return
 
         baseline.assertOrWrite(
-            identifier = context.requiredTestClass.simpleName + "-" + context.requiredTestMethod.name.hashCode(),
+            identifier = context.requiredTestClass.simpleName + "-" + shortenMethodName(context.requiredTestMethod.name),
             recordMode = isRecording
         )
     }
@@ -64,6 +65,13 @@ class BaselineExtension : TestExecutionExceptionHandler,
             baselineOutput = Path(getProp("baseline.output"))
         )
     }
+
+    private fun shortenMethodName(name: String) =
+        name.split(" ")
+            .take(4)
+            .joinToString(".") { word -> word.lowercase().filter { it.isLetter() || it.isDigit() } }
+            .plus(".")
+            .plus(name.hashCode())
 
     private fun ExtensionContext.isNestedTestClass(): Boolean =
         parent.flatMap { it.testClass }

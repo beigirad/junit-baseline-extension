@@ -117,7 +117,7 @@ Run your tests with `baseline.record=true` to create baseline files:
 This creates JSON files in your baseline output directory:
 
 - `baseline-MyTestClass.json` (for class-level extensions)
-- `baseline-MyTestClass-<methodHash>.json` (for method-level extensions)
+- `baseline-MyTestClass-shortened.method.name.<hash>.json` (for method-level extensions)
 
 ### 2. Verify Against Baseline
 

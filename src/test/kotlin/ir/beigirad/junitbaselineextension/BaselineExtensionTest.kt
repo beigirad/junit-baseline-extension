@@ -94,7 +94,7 @@ class BaselineExtensionTest {
 
 class MethodLevelTest {
     companion object {
-        val baselineFileName = "baseline-MethodLevelTest-${"first test".hashCode()}.json"
+        val baselineFileName = "baseline-MethodLevelTest-first.test.-218984446.json"
         val baselineContent =
             """{"[engine:junit-jupiter]/[class:ir.beigirad.junitbaselineextension.MethodLevelTest]/[method:first test()]":"First failure"}"""
     }
