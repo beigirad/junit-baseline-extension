@@ -27,13 +27,6 @@ class BaselineTest {
     @TempDir
     lateinit var baselineOutput: Path
 
-    @OptIn(ExperimentalPathApi::class)
-    @AfterEach
-    fun cleanup() {
-        baselineOutput.listDirectoryEntries().forEach { it.deleteRecursively() }
-        rootDir.listDirectoryEntries().forEach { it.deleteRecursively() }
-    }
-
     @Test
     fun `sanitizeMessage should remove project path from error message`() {
         val baseline = Baseline(projectRoot = rootDir, baselineOutput = baselineOutput)
