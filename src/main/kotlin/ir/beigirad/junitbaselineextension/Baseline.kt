@@ -11,13 +11,14 @@ import org.jetbrains.annotations.TestOnly
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.path.absolutePathString
+import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
 data class Baseline(
     private val projectRoot: Path,
-    private val baselineOutput: Path,
+    private val baselineOutputParent: Path,
 ) {
     private val failures = ConcurrentHashMap<String, String>()
 
@@ -40,6 +41,8 @@ data class Baseline(
     internal fun write(identifier: String) {
         val file = getBaselineFile(identifier)
         try {
+            baselineOutputParent.createDirectories() // make sure the parent exists
+
             val json = adapter.toJson(failures)
             file.writeText(json)
         } catch (e: Exception) {
@@ -98,6 +101,6 @@ data class Baseline(
 
     private fun getBaselineFile(identifier: String): Path {
         val fileName = "baseline-${identifier.replace(" ", "-")}.json"
-        return baselineOutput.resolve(fileName)
+        return baselineOutputParent.resolve(fileName)
     }
 }

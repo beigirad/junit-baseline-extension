@@ -62,7 +62,7 @@ class BaselineExtension : TestExecutionExceptionHandler,
         isRecording = getProp(ARG_RECORD) == "true"
         baseline = Baseline(
             projectRoot = Path(getProp("baseline.root")),
-            baselineOutput = Path(getProp("baseline.output"))
+            baselineOutputParent = Path(getProp("baseline.output"))
         )
     }
 

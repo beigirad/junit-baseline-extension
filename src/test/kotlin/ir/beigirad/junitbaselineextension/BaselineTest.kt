@@ -29,7 +29,7 @@ class BaselineTest {
 
     @Test
     fun `sanitizeMessage should remove project path from error message`() {
-        val baseline = Baseline(projectRoot = rootDir, baselineOutput = baselineOutput)
+        val baseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
         val errorMessage = "${rootDir.toAbsolutePath()}/some/file.kt:10 - Test failed"
 
         val result = baseline.sanitizeMessage(errorMessage)
@@ -40,7 +40,7 @@ class BaselineTest {
 
     @Test
     fun `sanitizeMessage should handle null, empty and whitespace messages`() {
-        val baseline = Baseline(projectRoot = rootDir, baselineOutput = baselineOutput)
+        val baseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
 
         assertSoftly {
             withClue("with null message") {
@@ -57,7 +57,7 @@ class BaselineTest {
 
     @Test
     fun `write should create baseline file with recorded failures`() {
-        val baseline = Baseline(projectRoot = rootDir, baselineOutput = baselineOutput)
+        val baseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
         baseline.recordFailure("test-1", "Error 1")
         baseline.recordFailure("test-2", "Error 2")
 
@@ -72,7 +72,7 @@ class BaselineTest {
 
     @Test
     fun `write should replace spaces with dashes in identifier`() {
-        val baseline = Baseline(projectRoot = rootDir, baselineOutput = baselineOutput)
+        val baseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
         baseline.recordFailure("test-1", "Error 1")
 
         baseline.write("my test identifier")
@@ -83,7 +83,7 @@ class BaselineTest {
 
     @Test
     fun `read should return empty map when baseline file does not exist`() {
-        val baseline = Baseline(projectRoot = rootDir, baselineOutput = baselineOutput)
+        val baseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
 
         val result = baseline.read("non-existent")
 
@@ -96,7 +96,7 @@ class BaselineTest {
             writeText("""{"test-2":"Error 2","test-1":"Error 1"}""")
         }
 
-        val baseline = Baseline(projectRoot = rootDir, baselineOutput = baselineOutput)
+        val baseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
         val result = baseline.read("test-identifier")
 
         result shouldContainExactly mapOf("test-1" to "Error 1", "test-2" to "Error 2")
@@ -107,7 +107,7 @@ class BaselineTest {
         val file = baselineOutput.resolve("baseline-corrupted.json")
         file.writeText("invalid json {")
 
-        val baseline = Baseline(projectRoot = rootDir, baselineOutput = baselineOutput)
+        val baseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
 
         val exception = shouldThrow<IllegalStateException> {
             baseline.read("corrupted")
@@ -119,7 +119,7 @@ class BaselineTest {
 
     @Test
     fun `compare should pass when failures match expected`() {
-        val baseline = Baseline(projectRoot = rootDir, baselineOutput = baselineOutput)
+        val baseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
         baseline.recordFailure("test-1", "Error 1")
         baseline.recordFailure("test-2", "Error 2")
 
@@ -130,7 +130,7 @@ class BaselineTest {
 
     @Test
     fun `compare should fail when new failures appear`() {
-        val baseline = Baseline(projectRoot = rootDir, baselineOutput = baselineOutput)
+        val baseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
         baseline.recordFailure("test-1", "Error 1")
         baseline.recordFailure("test-2", "Error 2")
 
@@ -146,7 +146,7 @@ class BaselineTest {
 
     @Test
     fun `compare should fail when failures are missing`() {
-        val baseline = Baseline(projectRoot = rootDir, baselineOutput = baselineOutput)
+        val baseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
         baseline.recordFailure("test-1", "Error 1")
 
         val expected = mapOf("test-1" to "Error 1", "test-2" to "Error 2")
@@ -160,7 +160,7 @@ class BaselineTest {
 
     @Test
     fun `assertOrWrite should write when recordMode is true`() {
-        val baseline = Baseline(projectRoot = rootDir, baselineOutput = baselineOutput)
+        val baseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
         baseline.recordFailure("test-1", "Error 1")
 
         baseline.assertOrWrite("test-identifier", recordMode = true)
@@ -171,11 +171,11 @@ class BaselineTest {
 
     @Test
     fun `assertOrWrite should compare when recordMode is false`() {
-        val baseline = Baseline(projectRoot = rootDir, baselineOutput = baselineOutput)
+        val baseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
         baseline.recordFailure("test-1", "Error 1")
         baseline.write("test-identifier")
 
-        val newBaseline = Baseline(projectRoot = rootDir, baselineOutput = baselineOutput)
+        val newBaseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
         newBaseline.recordFailure("test-1", "Error 1")
 
         newBaseline.assertOrWrite("test-identifier", recordMode = false)
@@ -183,11 +183,11 @@ class BaselineTest {
 
     @Test
     fun `assertOrWrite should fail comparison when failures mismatch`() {
-        val baseline = Baseline(projectRoot = rootDir, baselineOutput = baselineOutput)
+        val baseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
         baseline.recordFailure("test-1", "Error 1")
         baseline.write("test-identifier")
 
-        val newBaseline = Baseline(projectRoot = rootDir, baselineOutput = baselineOutput)
+        val newBaseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
         newBaseline.recordFailure("test-1", "Different Error")
 
         shouldThrow<AssertionError> {
