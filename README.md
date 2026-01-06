@@ -147,8 +147,8 @@ Baselines are stored as JSON with test IDs as keys and error messages as values:
 
 ```json
 {
-  "[engine:junit-jupiter]/[class:MyTest]/[method:test1()]": "Expected failure",
-  "[engine:junit-jupiter]/[class:MyTest]/[method:test2()]": "Another expected failure"
+   "test method name": "Expected failure",
+   "anotherTestName": "Another expected failure"
 }
 ```
 

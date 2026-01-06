@@ -32,7 +32,7 @@ class BaselineExtension : TestExecutionExceptionHandler,
 
     override fun handleTestExecutionException(context: ExtensionContext, throwable: Throwable) {
         // record test failures without throwing, for baseline comparison instead of `throw throwable`
-        baseline.recordFailure(context.uniqueId, throwable.message)
+        baseline.recordFailure(context.displayName, throwable.message)
     }
 
     override fun afterEach(context: ExtensionContext) {
