@@ -20,14 +20,18 @@ data class Baseline(
     private val projectRoot: Path,
     private val baselineOutputParent: Path,
 ) {
-    private val failures = ConcurrentHashMap<String, String>()
+    private val failures = ConcurrentHashMap<String, List<String>>()
 
-    private val adapter = Moshi.Builder().build().adapter<Map<String, String>>(
-        Types.newParameterizedType(Map::class.java, String::class.java, String::class.java)
-    ).indent("   ")
+    private val adapter = Moshi.Builder().build().adapter<Map<String, List<String>>>(
+        Types.newParameterizedType(
+            Map::class.java,
+            String::class.java,
+            Types.newParameterizedType(List::class.java, String::class.java)
+        )
+    ).indent("  ")
 
     fun recordFailure(testId: String, errorMessage: String?) {
-        failures[testId] = sanitizeMessage(errorMessage)
+        failures[testId] = errorMessage?.lines()?.map { sanitizeMessage(it) }.orEmpty()
     }
 
     @TestOnly
@@ -35,7 +39,6 @@ data class Baseline(
         message.orEmpty()
             .replace(projectRoot.absolutePathString(), "")
             .trim()
-            .ifEmpty { "No message" }
 
     @TestOnly
     internal fun write(identifier: String) {
@@ -51,7 +54,7 @@ data class Baseline(
     }
 
     @TestOnly
-    internal fun read(identifier: String): Map<String, String> {
+    internal fun read(identifier: String): Map<String, List<String>> {
         val file = getBaselineFile(identifier)
         if (!file.exists()) {
             return emptyMap()
@@ -68,7 +71,7 @@ data class Baseline(
     }
 
     @TestOnly
-    internal fun compare(identifier: String, expected: Map<String, String>) {
+    internal fun compare(identifier: String, expected: Map<String, List<String>>) {
         val file = getBaselineFile(identifier)
         assertSoftly {
             withClue(buildString {

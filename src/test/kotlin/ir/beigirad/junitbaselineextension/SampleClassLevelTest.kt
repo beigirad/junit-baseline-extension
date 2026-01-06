@@ -16,6 +16,6 @@ class SampleClassLevelTest {
 
     @Test
     fun `second test`() {
-        throw AssertionError("Second failure")
+        throw AssertionError("Second failure\nSecond failure line2\nSecond failure line3")
     }
 }

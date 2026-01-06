@@ -1,4 +1,10 @@
 {
-   "second test()": "Second failure",
-   "first test()": "First failure"
+  "second test()": [
+    "Second failure",
+    "Second failure line2",
+    "Second failure line3"
+  ],
+  "first test()": [
+    "First failure"
+  ]
 }

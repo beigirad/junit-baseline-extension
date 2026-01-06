@@ -41,13 +41,13 @@ class BaselineTest {
 
         assertSoftly {
             withClue("with null message") {
-                baseline.sanitizeMessage(null) shouldBe "No message"
+                baseline.sanitizeMessage(null) shouldBe ""
             }
             withClue("with empty message") {
-                baseline.sanitizeMessage("") shouldBe "No message"
+                baseline.sanitizeMessage("") shouldBe ""
             }
             withClue("with whitespace message") {
-                baseline.sanitizeMessage("    ") shouldBe "No message"
+                baseline.sanitizeMessage("    ") shouldBe ""
             }
         }
     }
@@ -55,7 +55,7 @@ class BaselineTest {
     @Test
     fun `write should create baseline file with recorded failures`() {
         val baseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
-        baseline.recordFailure("test-1", "Error 1")
+        baseline.recordFailure("test-1", "Error 1\nError 1 line2")
         baseline.recordFailure("test-2", "Error 2")
 
         baseline.write("my-test")
@@ -66,8 +66,13 @@ class BaselineTest {
         val content = file.readText()
         content shouldBeEqual """
             {
-               "test-2": "Error 2",
-               "test-1": "Error 1"
+              "test-2": [
+                "Error 2"
+              ],
+              "test-1": [
+                "Error 1",
+                "Error 1 line2"
+              ]
             }
         """.trimIndent()
     }
@@ -95,13 +100,24 @@ class BaselineTest {
     @Test
     fun `read should load failures from existing baseline file`() {
         baselineOutput.resolve("baseline-test-identifier.json").apply {
-            writeText("""{"test-2":"Error 2","test-1":"Error 1"}""")
+            writeText(
+                """
+                {
+                    "test-2":[
+                        "Error 2"
+                    ],
+                    "test-1":[
+                        "Error 1"
+                    ]
+                }
+            """.trimIndent()
+            )
         }
 
         val baseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
         val result = baseline.read("test-identifier")
 
-        result shouldContainExactly mapOf("test-1" to "Error 1", "test-2" to "Error 2")
+        result shouldContainExactly mapOf("test-1" to listOf("Error 1"), "test-2" to listOf("Error 2"))
     }
 
     @Test
@@ -125,7 +141,7 @@ class BaselineTest {
         baseline.recordFailure("test-1", "Error 1")
         baseline.recordFailure("test-2", "Error 2")
 
-        val expected = mapOf("test-1" to "Error 1", "test-2" to "Error 2")
+        val expected = mapOf("test-1" to listOf("Error 1"), "test-2" to listOf("Error 2"))
 
         baseline.compare("test-identifier", expected)
     }
@@ -136,7 +152,7 @@ class BaselineTest {
         baseline.recordFailure("test-1", "Error 1")
         baseline.recordFailure("test-2", "Error 2")
 
-        val expected = mapOf("test-1" to "Error 1")
+        val expected = mapOf("test-1" to listOf("Error 1"))
 
         val exception = shouldThrow<AssertionError> {
             baseline.compare("test-identifier", expected)
@@ -151,7 +167,7 @@ class BaselineTest {
         val baseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
         baseline.recordFailure("test-1", "Error 1")
 
-        val expected = mapOf("test-1" to "Error 1", "test-2" to "Error 2")
+        val expected = mapOf("test-1" to listOf("Error 1"), "test-2" to listOf("Error 2"))
 
         val exception = shouldThrow<AssertionError> {
             baseline.compare("test-identifier", expected)
