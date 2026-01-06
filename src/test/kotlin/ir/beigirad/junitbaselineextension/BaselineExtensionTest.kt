@@ -34,7 +34,7 @@ class BaselineExtensionTest {
             events.containerEvents().failed().count() shouldBe 0
         }
 
-        val baselineFile = baselinePath.resolve("baseline-ClassLevelTest.json")
+        val baselineFile = baselinePath.resolve(ClassLevelTest.baselineFileName)
         baselineFile.exists() shouldBe true
 
         baselineFile.readText() shouldBe ClassLevelTest.baselineContent
@@ -42,7 +42,7 @@ class BaselineExtensionTest {
 
     @Test
     fun `should assert against baseline when recordBaseline is false for class-level extension`() {
-        val baselineFile = baselinePath.resolve("baseline-ClassLevelTest.json")
+        val baselineFile = baselinePath.resolve(ClassLevelTest.baselineFileName)
         baselineFile.writeText(ClassLevelTest.baselineContent)
 
         val events = EngineTestKit.engine("junit-jupiter")
@@ -114,6 +114,7 @@ class MethodLevelTest {
 @ExtendWith(BaselineExtension::class)
 class ClassLevelTest {
     companion object {
+        val baselineFileName = "baseline-ClassLevelTest.json"
         val baselineContent =
             """{"[engine:junit-jupiter]/[class:ir.beigirad.junitbaselineextension.ClassLevelTest]/[method:first test()]":"First failure","[engine:junit-jupiter]/[class:ir.beigirad.junitbaselineextension.ClassLevelTest]/[method:second test()]":"Second failure"}"""
     }
