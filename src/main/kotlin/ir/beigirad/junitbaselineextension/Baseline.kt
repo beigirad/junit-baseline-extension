@@ -24,7 +24,7 @@ data class Baseline(
 
     private val adapter = Moshi.Builder().build().adapter<Map<String, String>>(
         Types.newParameterizedType(Map::class.java, String::class.java, String::class.java)
-    )
+    ).indent("   ")
 
     fun recordFailure(testId: String, errorMessage: String?) {
         failures[testId] = sanitizeMessage(errorMessage)

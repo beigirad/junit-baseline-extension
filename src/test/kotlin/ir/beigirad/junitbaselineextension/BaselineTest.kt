@@ -3,6 +3,7 @@ package ir.beigirad.junitbaselineextension
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.withClue
+import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.maps.shouldBeEmpty
 import io.kotest.matchers.maps.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -63,7 +64,12 @@ class BaselineTest {
         file.exists() shouldBe true
 
         val content = file.readText()
-        content shouldBe """{"test-2":"Error 2","test-1":"Error 1"}"""
+        content shouldBeEqual """
+            {
+               "test-2": "Error 2",
+               "test-1": "Error 1"
+            }
+        """.trimIndent()
     }
 
     @Test
