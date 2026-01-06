@@ -22,7 +22,7 @@ class BaselineExtensionTest {
     lateinit var baselinePath: Path
 
     @Test
-    fun `should record baseline when recordBaseline is true for class-level extension`() {
+    fun `should record baseline when record mode is true for class-level extension`() {
         val events = EngineTestKit.engine("junit-jupiter")
             .selectors(DiscoverySelectors.selectClass(ClassLevelTest::class.java))
             .configurationParameter("baseline.root", rootPath.absolutePathString())
@@ -41,7 +41,7 @@ class BaselineExtensionTest {
     }
 
     @Test
-    fun `should assert against baseline when recordBaseline is false for class-level extension`() {
+    fun `should assert against baseline when record mode is false for class-level extension`() {
         val baselineFile = baselinePath.resolve(ClassLevelTest.baselineFileName)
         baselineFile.writeText(ClassLevelTest.baselineContent)
 
@@ -57,7 +57,7 @@ class BaselineExtensionTest {
     }
 
     @Test
-    fun `should record baseline when recordBaseline is true for method-level extension`() {
+    fun `should record baseline when record mode is true for method-level extension`() {
         val events = EngineTestKit.engine("junit-jupiter")
             .selectors(DiscoverySelectors.selectClass(MethodLevelTest::class.java))
             .configurationParameter("baseline.root", rootPath.absolutePathString())
@@ -76,7 +76,7 @@ class BaselineExtensionTest {
     }
 
     @Test
-    fun `should assert against baseline when recordBaseline is false for method-level extension`() {
+    fun `should assert against baseline when record mode is false for method-level extension`() {
         val baselineFile = baselinePath.resolve(MethodLevelTest.baselineFileName)
         baselineFile.writeText(MethodLevelTest.baselineContent)
 
