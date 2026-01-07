@@ -150,8 +150,13 @@ Baselines are stored as JSON with test IDs as keys and error messages as values:
 
 ```json
 {
-   "test method name": "Expected failure",
-   "anotherTestName": "Another expected failure"
+  "test method name": [
+    "Expected failure"
+  ],
+  "anotherTestName": [
+    "Another expected failure",
+    "Expected failure line 2"
+  ]
 }
 ```
 
