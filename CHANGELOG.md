@@ -1,6 +1,4 @@
-## Unreleased
-
-### Changed
+## 1.3
 
 - **BREAKING**: Baseline schema now stores arrays of strings instead of single strings for each test:
     - Schema format: `{"testName": ["error line1", "error line2"]}` instead of `{"testName": "error message"}`
