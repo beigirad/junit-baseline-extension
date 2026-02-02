@@ -70,11 +70,11 @@ class MyTest {
 
 ## Configuration
 
-The extension requires two configuration parameters:
+The extension accepts some configuration parameters:
 
-- **`baseline.output`**: The directory where baseline files will be stored
-- **`baseline.root`**: The root directory of your project (used for path sanitization)
-- **`baseline.record`**: Set to `true` to record/update baselines, `false` to assert against them
+- **`baseline.output`**: The directory where baseline files will be stored (default: `PROJECT_DIR/test-baseline`)
+- **`baseline.root`**: The root directory of your project (used for path sanitization) (default: `null`)
+- **`baseline.record`**: Set to `true` to record/update baselines, `false` to assert against them (default: `false`)
 
 ### Configuration via Gradle params
 
