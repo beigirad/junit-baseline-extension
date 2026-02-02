@@ -56,13 +56,15 @@ class BaselineExtension : TestExecutionExceptionHandler,
     }
 
     private fun initialize(context: ExtensionContext) {
-        fun getProp(key: String) =
+        fun getProp(key: String): String? =
             context.getConfigurationParameter(key).orElse(System.getProperty(key))
 
         isRecording = getProp(ARG_RECORD) == "true"
+        val baselineRoot = getProp("baseline.root")
+        val baselineOutput = getProp("baseline.output") ?: "test-baseline"
         baseline = Baseline(
-            projectRoot = Path(getProp("baseline.root")),
-            baselineOutputParent = Path(getProp("baseline.output"))
+            projectRoot = baselineRoot?.let(::Path),
+            baselineOutputParent = Path(baselineOutput)
         )
     }
 

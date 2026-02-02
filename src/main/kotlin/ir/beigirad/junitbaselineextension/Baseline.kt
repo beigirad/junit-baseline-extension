@@ -17,7 +17,7 @@ import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
 data class Baseline(
-    private val projectRoot: Path,
+    private val projectRoot: Path? = null,
     private val baselineOutputParent: Path,
 ) {
     private val failures = ConcurrentHashMap<String, List<String>>()
@@ -37,7 +37,7 @@ data class Baseline(
     @TestOnly
     internal fun sanitizeMessage(message: String?): String =
         message.orEmpty()
-            .replace(projectRoot.absolutePathString(), "")
+            .let { if (projectRoot != null) it.replace(projectRoot.absolutePathString(), "") else it }
             .trim()
 
     @TestOnly
