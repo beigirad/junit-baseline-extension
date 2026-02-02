@@ -2,8 +2,8 @@ plugins {
     kotlin("jvm") version "1.8.20"
 }
 
-group = "ir.beigirad"
-version = "1.0-SNAPSHOT"
+group = "com.github.beigirad"
+version = "1.4"
 
 repositories {
     mavenCentral()
