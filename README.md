@@ -76,36 +76,46 @@ The extension accepts some configuration parameters:
 - **`baseline.root`**: The root directory of your project (used for path sanitization) (default: `null`)
 - **`baseline.record`**: Set to `true` to record/update baselines, `false` to assert against them (default: `false`)
 
-### Configuration via Gradle params
-
-```bash
-./gradlew test -Dbaseline.output=/path/to/baselines \ 
-                -Dbaseline.root=/path/to/project \
-                -Dbaseline.record=true
-```
-
-Or via `junit-platform.properties`:
-
-```properties
-baseline.root=/path/to/project
-baseline.output=/path/to/baselines
-baseline.record=false
-```
-
 ### Configuration via System Properties
 
 In `build.gradle.kts`:
 
 ```kotlin
 tasks.test {
-   useJUnitPlatform()
+    useJUnitPlatform()
 
-   systemProperty("baseline.output", projectDir.resolve("baseline").absolutePath)
-   systemProperty("baseline.root", rootDir.absolutePath)
-   systemProperty("baseline.record", true)
+    systemProperty("baseline.output", projectDir.resolve("baseline").absolutePath)
+    systemProperty("baseline.root", rootDir.absolutePath)
+    systemProperty("baseline.record", System.getProperty("baseline.record", "false"))
 }
 ```
 
+### Configuration via Gradle params
+
+If you want to pass the args by terminal like below, you just configure them in `build.gradle.kts`:
+
+```bash
+./gradlew test -Dbaseline.record=true
+```
+
+In `build.gradle.kts`:
+
+```kotlin
+tasks.test {
+    // bypass args from `System.getProperty` into `systemProperty`
+    systemProperty("baseline.record", System.getProperty("baseline.record", "false"))
+}
+```
+
+### Configuration via Junit platform configuration:
+
+In `junit-platform.properties`:
+
+```properties
+baseline.root=/path/to/project
+baseline.output=/path/to/baselines
+baseline.record=false
+```
 
 ## Workflow
 
