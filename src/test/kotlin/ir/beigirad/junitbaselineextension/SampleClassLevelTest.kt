@@ -5,9 +5,6 @@ import org.junit.jupiter.api.Test
 
 @ExtendWith(BaselineExtension::class)
 class SampleClassLevelTest {
-    companion object {
-        val baselineFileName = "baseline-SampleClassLevelTest.json"
-    }
 
     @Test
     fun `first test`() {

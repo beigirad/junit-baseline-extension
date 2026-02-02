@@ -35,9 +35,11 @@ class BaselineExtensionTest {
             events.containerEvents().failed().count() shouldBe 0
         }
 
-        baselinePath.resolve(SampleClassLevelTest.baselineFileName).asClue {
+        val baselineFileName = "baseline-SampleClassLevelTest.json"
+
+        baselinePath.resolve(baselineFileName).asClue {
             it.exists() shouldBe true
-            it.readText() shouldBe sampleBaselinePath.resolve(SampleClassLevelTest.baselineFileName).readText()
+            it.readText() shouldBe sampleBaselinePath.resolve(baselineFileName).readText()
         }
     }
 
@@ -67,9 +69,10 @@ class BaselineExtensionTest {
             events.containerEvents().failed().count() shouldBe 0
         }
 
-        baselinePath.resolve(SampleMethodLevelTest.baselineFileName).asClue {
+        val baselineFileName = "baseline-SampleMethodLevelTest-first.test.-218984446.json"
+        baselinePath.resolve(baselineFileName).asClue {
             it.exists() shouldBe true
-            it.readText() shouldBe sampleBaselinePath.resolve(SampleMethodLevelTest.baselineFileName).readText()
+            it.readText() shouldBe sampleBaselinePath.resolve(baselineFileName).readText()
         }
     }
 
