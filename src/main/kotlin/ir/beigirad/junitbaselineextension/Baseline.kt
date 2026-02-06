@@ -2,11 +2,10 @@ package ir.beigirad.junitbaselineextension
 
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
-import io.kotest.assertions.assertSoftly
-import io.kotest.assertions.withClue
-import io.kotest.matchers.maps.shouldContainExactly
 import ir.beigirad.junitbaselineextension.BaselineExtension.Companion.ARG_RECORD
 import org.jetbrains.annotations.TestOnly
+import java.io.PrintWriter
+import java.io.Writer
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.path.absolutePathString
@@ -69,14 +68,8 @@ data class Baseline(
 
         val actual: Map<String, List<String>> = failures.mapValues { it.value.sanitizedMessages(projectRoot) }
 
-        assertSoftly {
-            withClue(buildString {
-                appendLine("Baseline mismatch. Update with: ./gradlew test -D$ARG_RECORD=true")
-                appendLine("Baseline: file://${file.absolutePathString()}")
-            }) {
-                actual shouldContainExactly expected
-            }
-        }
+        if (actual.any { (key, value) -> expected[key] != value } || expected.any { (key, value) -> actual[key] != value })
+            throw BaselineException(file, failures.map { it.value.throwable })
     }
 
     fun assertOrWrite(identifier: String, recordMode: Boolean) {
@@ -105,3 +98,38 @@ data class Baseline(
         }
     }
 }
+
+private class BaselineException(
+    private val baselinePath: Path,
+    private val children: List<Throwable>
+) : Throwable() {
+    // omit the stacktrace to hide baseline stacktrace
+    override fun getStackTrace(): Array<out StackTraceElement?>? = emptyArray()
+
+    override val message: String
+        get() = buildString {
+            appendLine("Baseline mismatch")
+            appendLine("Baseline: file://${baselinePath.absolutePathString()}")
+            appendLine("Update with : ./ gradlew test - D$ARG_RECORD=true")
+            appendLine()
+            appendLine("Test cases: ${children.size}")
+            children.forEachIndexed { index, throwable ->
+                appendLine("$index) ${throwable.message}")
+                throwable.printStackTrace(StackTraceWriterWrapper(this))
+            }
+        }
+
+    override fun toString() = message
+    private class StackTraceWriterWrapper(
+        builder: StringBuilder
+    ) : PrintWriter(
+        object : Writer() {
+            override fun write(cbuf: CharArray?, off: Int, len: Int) {
+                builder.append(cbuf, off, len)
+            }
+
+            override fun flush() = Unit
+            override fun close() = Unit
+        })
+}
+

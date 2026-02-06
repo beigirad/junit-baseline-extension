@@ -1,5 +1,6 @@
 package ir.beigirad.junitbaselineextension
 
+import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.maps.shouldBeEmpty
@@ -10,9 +11,11 @@ import io.kotest.matchers.string.shouldNotContain
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Path
+import kotlin.io.path.absolutePathString
 import kotlin.io.path.exists
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
+import kotlin.test.assertTrue
 
 class BaselineTest {
 
@@ -175,6 +178,55 @@ class BaselineTest {
 
         shouldThrow<Throwable> {
             newBaseline.assertOrWrite("test-identifier", recordMode = false)
+        }
+    }
+
+    @Test
+    fun `baseline exceptions mentions actual exception`() {
+        val baseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
+        baseline.recordFailure(
+            "test-me",
+            Exception(
+                "Normal exception",
+                RuntimeException(
+                    "Runtime of exception",
+                    IllegalStateException(
+                        "Root Cause"
+                    )
+                )
+            )
+        )
+
+        val throwableLines = shouldThrow<Throwable> {
+            baseline.compare("test-identifier", emptyMap())
+        }.message.orEmpty().lines()
+
+        val expectedLines = listOf(
+            "Baseline mismatch",
+            "Baseline: file://${baselineOutput.absolutePathString()}/baseline-test-identifier.json",
+            "Update with : ./ gradlew test - Dbaseline.record=true",
+            "Test cases: 1",
+            "0) Normal exception",
+            "java.lang.Exception: Normal exception",
+            "at ir.beigirad.junitbaselineextension.BaselineTest.baseline exceptions mentions actual exception(BaselineTest.kt",
+            "Caused by: java.lang.RuntimeException: Runtime of exception",
+            "at ir.beigirad.junitbaselineextension.BaselineTest.baseline exceptions mentions actual exception(BaselineTest.kt",
+            "Caused by: java.lang.IllegalStateException: Root Cause",
+            "at ir.beigirad.junitbaselineextension.BaselineTest.baseline exceptions mentions actual exception(BaselineTest.kt",
+        )
+
+        var searchFrom = 0
+        for ((index, expectedLine) in expectedLines.withIndex()) {
+            var matchIndex = -1
+            for (i in searchFrom until throwableLines.size) {
+                if (throwableLines[i].trim().startsWith(expectedLine)) {
+                    matchIndex = i
+                    break
+                }
+            }
+            println("[${index + 1}/${expectedLines.size}] ${if (matchIndex != -1) "✓" else "✗"} \"$expectedLine\" -> line $matchIndex")
+            assertTrue("No match found for \"$expectedLine\"") { matchIndex != -1 }
+            searchFrom = matchIndex + 1
         }
     }
 }
