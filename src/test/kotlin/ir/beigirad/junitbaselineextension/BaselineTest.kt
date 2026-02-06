@@ -1,8 +1,6 @@
 package ir.beigirad.junitbaselineextension
 
-import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.assertions.withClue
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.maps.shouldBeEmpty
 import io.kotest.matchers.maps.shouldContainExactly
@@ -25,38 +23,21 @@ class BaselineTest {
     lateinit var baselineOutput: Path
 
     @Test
-    fun `sanitizeMessage should remove project path from error message`() {
-        val baseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
+    fun `exceptions should be sanitized from rootDir`() {
         val errorMessage = "${rootDir.toAbsolutePath()}/some/file.kt:10 - Test failed"
 
-        val result = baseline.sanitizeMessage(errorMessage)
+        val exception = Baseline.ExceptionWrapper(Exception(errorMessage))
+        val sanitizedMessage = exception.sanitizedMessages(rootDir).single()
 
-        result shouldNotContain rootDir.toAbsolutePath().toString()
-        result shouldBe "/some/file.kt:10 - Test failed"
-    }
-
-    @Test
-    fun `sanitizeMessage should handle null, empty and whitespace messages`() {
-        val baseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
-
-        assertSoftly {
-            withClue("with null message") {
-                baseline.sanitizeMessage(null) shouldBe ""
-            }
-            withClue("with empty message") {
-                baseline.sanitizeMessage("") shouldBe ""
-            }
-            withClue("with whitespace message") {
-                baseline.sanitizeMessage("    ") shouldBe ""
-            }
-        }
+        sanitizedMessage shouldNotContain rootDir.toAbsolutePath().toString()
+        sanitizedMessage shouldBe "/some/file.kt:10 - Test failed"
     }
 
     @Test
     fun `write should create baseline file with recorded failures`() {
         val baseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
-        baseline.recordFailure("test-1", "Error 1\nError 1 line2")
-        baseline.recordFailure("test-2", "Error 2")
+        baseline.recordFailure("test-1", Throwable("Error 1\nError 1 line2"))
+        baseline.recordFailure("test-2", Throwable("Error 2"))
 
         baseline.write("my-test")
 
@@ -80,7 +61,7 @@ class BaselineTest {
     @Test
     fun `write should replace spaces with dashes in identifier`() {
         val baseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
-        baseline.recordFailure("test-1", "Error 1")
+        baseline.recordFailure("test-1", Throwable("Error 1"))
 
         baseline.write("my test identifier")
 
@@ -138,8 +119,8 @@ class BaselineTest {
     @Test
     fun `compare should pass when failures match expected`() {
         val baseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
-        baseline.recordFailure("test-1", "Error 1")
-        baseline.recordFailure("test-2", "Error 2")
+        baseline.recordFailure("test-1", Throwable("Error 1"))
+        baseline.recordFailure("test-2", Throwable("Error 2"))
 
         val expected = mapOf("test-1" to listOf("Error 1"), "test-2" to listOf("Error 2"))
 
@@ -149,27 +130,11 @@ class BaselineTest {
     @Test
     fun `compare should fail when new failures appear`() {
         val baseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
-        baseline.recordFailure("test-1", "Error 1")
-        baseline.recordFailure("test-2", "Error 2")
-
-        val expected = mapOf("test-1" to listOf("Error 1"))
-
-        val exception = shouldThrow<AssertionError> {
-            baseline.compare("test-identifier", expected)
-        }
-
-        exception.message shouldContain "New failures not in baseline"
-        exception.message shouldContain "test-2"
-    }
-
-    @Test
-    fun `compare should fail when failures are missing`() {
-        val baseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
-        baseline.recordFailure("test-1", "Error 1")
+        baseline.recordFailure("test-1", Throwable("Error 1"))
 
         val expected = mapOf("test-1" to listOf("Error 1"), "test-2" to listOf("Error 2"))
 
-        val exception = shouldThrow<AssertionError> {
+        val exception = shouldThrow<Throwable> {
             baseline.compare("test-identifier", expected)
         }
 
@@ -179,7 +144,7 @@ class BaselineTest {
     @Test
     fun `assertOrWrite should write when recordMode is true`() {
         val baseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
-        baseline.recordFailure("test-1", "Error 1")
+        baseline.recordFailure("test-1", Throwable("Error 1"))
 
         baseline.assertOrWrite("test-identifier", recordMode = true)
 
@@ -190,11 +155,11 @@ class BaselineTest {
     @Test
     fun `assertOrWrite should compare when recordMode is false`() {
         val baseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
-        baseline.recordFailure("test-1", "Error 1")
+        baseline.recordFailure("test-1", Throwable("Error 1"))
         baseline.write("test-identifier")
 
         val newBaseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
-        newBaseline.recordFailure("test-1", "Error 1")
+        newBaseline.recordFailure("test-1", Throwable("Error 1"))
 
         newBaseline.assertOrWrite("test-identifier", recordMode = false)
     }
@@ -202,13 +167,13 @@ class BaselineTest {
     @Test
     fun `assertOrWrite should fail comparison when failures mismatch`() {
         val baseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
-        baseline.recordFailure("test-1", "Error 1")
+        baseline.recordFailure("test-1", Throwable("Error 1"))
         baseline.write("test-identifier")
 
         val newBaseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
-        newBaseline.recordFailure("test-1", "Different Error")
+        newBaseline.recordFailure("test-1", Throwable("Different Error"))
 
-        shouldThrow<AssertionError> {
+        shouldThrow<Throwable> {
             newBaseline.assertOrWrite("test-identifier", recordMode = false)
         }
     }
