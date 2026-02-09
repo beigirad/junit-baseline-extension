@@ -2,12 +2,10 @@ package ir.beigirad.junitbaselineextension
 
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
-import io.kotest.assertions.assertSoftly
-import io.kotest.assertions.withClue
-import io.kotest.matchers.maps.shouldBeEmpty
-import io.kotest.matchers.maps.shouldContainExactly
 import ir.beigirad.junitbaselineextension.BaselineExtension.Companion.ARG_RECORD
 import org.jetbrains.annotations.TestOnly
+import java.io.PrintWriter
+import java.io.Writer
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.path.absolutePathString
@@ -20,7 +18,7 @@ data class Baseline(
     private val projectRoot: Path? = null,
     private val baselineOutputParent: Path,
 ) {
-    private val failures = ConcurrentHashMap<String, List<String>>()
+    private val failures = ConcurrentHashMap<String, ExceptionWrapper>()
 
     private val adapter = Moshi.Builder().build().adapter<Map<String, List<String>>>(
         Types.newParameterizedType(
@@ -30,15 +28,9 @@ data class Baseline(
         )
     ).indent("  ")
 
-    fun recordFailure(testId: String, errorMessage: String?) {
-        failures[testId] = errorMessage?.lines()?.map { sanitizeMessage(it) }.orEmpty()
+    fun recordFailure(testId: String, throwable: Throwable) {
+        failures[testId] = ExceptionWrapper(throwable)
     }
-
-    @TestOnly
-    internal fun sanitizeMessage(message: String?): String =
-        message.orEmpty()
-            .let { if (projectRoot != null) it.replace(projectRoot.absolutePathString(), "") else it }
-            .trim()
 
     @TestOnly
     internal fun write(identifier: String) {
@@ -46,7 +38,7 @@ data class Baseline(
         try {
             baselineOutputParent.createDirectories() // make sure the parent exists
 
-            val json = adapter.toJson(failures)
+            val json = adapter.toJson(failures.mapValues { it.value.sanitizedMessages(projectRoot) })
             file.writeText(json)
         } catch (e: Exception) {
             throw IllegalStateException("Failed to write baseline: ${file.absolutePathString()}", e)
@@ -73,23 +65,11 @@ data class Baseline(
     @TestOnly
     internal fun compare(identifier: String, expected: Map<String, List<String>>) {
         val file = getBaselineFile(identifier)
-        assertSoftly {
-            withClue(buildString {
-                val newFailures = failures.filterKeys { it !in expected.keys }
-                appendLine("New failures not in baseline (${newFailures.size}):")
-                newFailures.forEach { (testId, message) ->
-                    appendLine("  $testId: $message")
-                }
-            }) {
-                failures.filterKeys { it !in expected.keys }.shouldBeEmpty()
-            }
-            withClue(buildString {
-                appendLine("Baseline mismatch. Update with: ./gradlew test -D$ARG_RECORD=true")
-                appendLine("Baseline: file://${file.absolutePathString()}")
-            }) {
-                failures shouldContainExactly expected
-            }
-        }
+
+        val actual: Map<String, List<String>> = failures.mapValues { it.value.sanitizedMessages(projectRoot) }
+
+        if (actual.any { (key, value) -> expected[key] != value } || expected.any { (key, value) -> actual[key] != value })
+            throw BaselineException(file, failures.map { it.value.throwable })
     }
 
     fun assertOrWrite(identifier: String, recordMode: Boolean) {
@@ -106,4 +86,50 @@ data class Baseline(
         val fileName = "baseline-${identifier.replace(" ", "-")}.json"
         return baselineOutputParent.resolve(fileName)
     }
+
+    internal class ExceptionWrapper(val throwable: Throwable) {
+
+        fun sanitizedMessages(projectRoot: Path? = null): List<String> {
+            val messageLines = throwable.message?.lines().orEmpty()
+            return if (projectRoot == null)
+                messageLines
+            else
+                messageLines.map { it.replace(projectRoot.absolutePathString(), "") }
+        }
+    }
 }
+
+private class BaselineException(
+    private val baselinePath: Path,
+    private val children: List<Throwable>
+) : Throwable() {
+    // omit the stacktrace to hide baseline stacktrace
+    override fun getStackTrace(): Array<out StackTraceElement?>? = emptyArray()
+
+    override val message: String
+        get() = buildString {
+            appendLine("Baseline mismatch")
+            appendLine("Baseline: file://${baselinePath.absolutePathString()}")
+            appendLine("Update with : ./ gradlew test - D$ARG_RECORD=true")
+            appendLine()
+            appendLine("Test cases: ${children.size}")
+            children.forEachIndexed { index, throwable ->
+                appendLine("$index) ${throwable.message}")
+                throwable.printStackTrace(StackTraceWriterWrapper(this))
+            }
+        }
+
+    override fun toString() = message
+    private class StackTraceWriterWrapper(
+        builder: StringBuilder
+    ) : PrintWriter(
+        object : Writer() {
+            override fun write(cbuf: CharArray?, off: Int, len: Int) {
+                builder.append(cbuf, off, len)
+            }
+
+            override fun flush() = Unit
+            override fun close() = Unit
+        })
+}
+
