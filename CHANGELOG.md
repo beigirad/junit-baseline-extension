@@ -1,3 +1,7 @@
+## 1.5
+
+- Fixed stacktrace of failed test [#3](https://github.com/beigirad/junit-baseline-extension/issues/3)
+
 ## 1.4
 
 - The configuration arguments are now optional, and they have followed default value:
