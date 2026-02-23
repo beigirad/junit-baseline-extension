@@ -1,3 +1,7 @@
+## 1.6
+
+- Remove unused kotest dependency
+
 ## 1.5
 
 - Fixed stacktrace of failed test [#3](https://github.com/beigirad/junit-baseline-extension/issues/3)
