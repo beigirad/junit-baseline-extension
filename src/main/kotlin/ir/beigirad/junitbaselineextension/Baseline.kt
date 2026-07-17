@@ -32,6 +32,8 @@ data class Baseline(
         failures[testId] = ExceptionWrapper(throwable)
     }
 
+    fun exists(identifier: String): Boolean = getBaselineFile(identifier).exists()
+
     @TestOnly
     internal fun write(identifier: String) {
         val file = getBaselineFile(identifier)
