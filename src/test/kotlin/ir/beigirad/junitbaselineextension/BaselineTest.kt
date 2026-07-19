@@ -73,6 +73,22 @@ class BaselineTest {
     }
 
     @Test
+    fun `exists should return false when baseline file does not exist`() {
+        val baseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
+
+        baseline.exists("non-existent") shouldBe false
+    }
+
+    @Test
+    fun `exists should return true after baseline file is written`() {
+        val baseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
+        baseline.recordFailure("test-1", Throwable("Error 1"))
+        baseline.write("test-identifier")
+
+        baseline.exists("test-identifier") shouldBe true
+    }
+
+    @Test
     fun `read should return empty map when baseline file does not exist`() {
         val baseline = Baseline(projectRoot = rootDir, baselineOutputParent = baselineOutput)
 

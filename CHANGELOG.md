@@ -1,3 +1,9 @@
+## 1.7
+
+- When no baseline file exists yet for a test (and `baseline.record` isn't `true`), the extension now behaves as a
+  no-op instead of failing with a generic `BaselineException` — the real failure surfaces normally, as if
+  `BaselineExtension` weren't applied at all.
+
 ## 1.6
 
 - Remove unused kotest dependency
