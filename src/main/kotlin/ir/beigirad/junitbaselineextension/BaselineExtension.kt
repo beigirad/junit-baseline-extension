@@ -16,7 +16,6 @@ class BaselineExtension : TestExecutionExceptionHandler,
     BeforeAllCallback,
     BeforeEachCallback {
     private lateinit var baseline: Baseline
-    private lateinit var identifier: String
     private var isRecording: Boolean = false
     private var hasBaseline: Boolean = false
 
@@ -51,7 +50,7 @@ class BaselineExtension : TestExecutionExceptionHandler,
         if (context.isAppliedByClass()) return
         if (!isRecording && !hasBaseline) return
 
-        baseline.assertOrWrite(identifier = identifier, recordMode = isRecording)
+        baseline.assertOrWrite(recordMode = isRecording)
     }
 
     override fun afterAll(context: ExtensionContext) {
@@ -59,22 +58,22 @@ class BaselineExtension : TestExecutionExceptionHandler,
         if (context.isNestedTestClass()) return
         if (!isRecording && !hasBaseline) return
 
-        baseline.assertOrWrite(identifier = identifier, recordMode = isRecording)
+        baseline.assertOrWrite(recordMode = isRecording)
     }
 
     private fun initialize(context: ExtensionContext, identifier: String) {
         fun getProp(key: String): String? =
             context.getConfigurationParameter(key).orElse(System.getProperty(key))
 
-        this.identifier = identifier
         isRecording = getProp(ARG_RECORD) == "true"
         val baselineRoot = getProp("baseline.root")
         val baselineOutput = getProp("baseline.output") ?: "test-baseline"
         baseline = Baseline(
+            identifier = identifier,
             projectRoot = baselineRoot?.let(::Path),
             baselineOutputParent = Path(baselineOutput)
         )
-        hasBaseline = baseline.exists(identifier)
+        hasBaseline = baseline.exists()
     }
 
     private fun shortenMethodName(name: String) =

@@ -15,6 +15,7 @@ import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
 data class Baseline(
+    private val identifier: String,
     private val projectRoot: Path? = null,
     private val baselineOutputParent: Path,
 ) {
@@ -32,11 +33,11 @@ data class Baseline(
         failures[testId] = ExceptionWrapper(throwable)
     }
 
-    fun exists(identifier: String): Boolean = getBaselineFile(identifier).exists()
+    fun exists(): Boolean = getBaselineFile().exists()
 
     @TestOnly
-    internal fun write(identifier: String) {
-        val file = getBaselineFile(identifier)
+    internal fun write() {
+        val file = getBaselineFile()
         try {
             baselineOutputParent.createDirectories() // make sure the parent exists
 
@@ -48,8 +49,8 @@ data class Baseline(
     }
 
     @TestOnly
-    internal fun read(identifier: String): Map<String, List<String>> {
-        val file = getBaselineFile(identifier)
+    internal fun read(): Map<String, List<String>> {
+        val file = getBaselineFile()
         if (!file.exists()) {
             return emptyMap()
         }
@@ -65,8 +66,8 @@ data class Baseline(
     }
 
     @TestOnly
-    internal fun compare(identifier: String, expected: Map<String, List<String>>) {
-        val file = getBaselineFile(identifier)
+    internal fun compare(expected: Map<String, List<String>>) {
+        val file = getBaselineFile()
 
         val actual: Map<String, List<String>> = failures.mapValues { it.value.sanitizedMessages(projectRoot) }
 
@@ -74,17 +75,17 @@ data class Baseline(
             throw BaselineException(file, failures.map { it.value.throwable })
     }
 
-    fun assertOrWrite(identifier: String, recordMode: Boolean) {
+    fun assertOrWrite(recordMode: Boolean) {
         if (recordMode) {
-            write(identifier)
+            write()
             return
         }
 
-        val expected = read(identifier)
-        compare(identifier, expected)
+        val expected = read()
+        compare(expected)
     }
 
-    private fun getBaselineFile(identifier: String): Path {
+    private fun getBaselineFile(): Path {
         val fileName = "baseline-${identifier.replace(" ", "-")}.json"
         return baselineOutputParent.resolve(fileName)
     }
@@ -126,7 +127,7 @@ private class BaselineException(
         builder: StringBuilder
     ) : PrintWriter(
         object : Writer() {
-            override fun write(cbuf: CharArray?, off: Int, len: Int) {
+            override fun write(cbuf: CharArray, off: Int, len: Int) {
                 builder.append(cbuf, off, len)
             }
 
