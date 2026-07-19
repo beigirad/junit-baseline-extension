@@ -1,8 +1,9 @@
 ## 1.7
 
-- When no baseline file exists yet for a test (and `baseline.record` isn't `true`), the extension now behaves as a
-  no-op instead of failing with a generic `BaselineException` — the real failure surfaces normally, as if
-  `BaselineExtension` weren't applied at all.
+- Baseline files are automatically deleted when a test run produces no failures (all tests pass).
+- Fix passing the test are passed and has no baseline file
+  exists [#5](https://github.com/beigirad/junit-baseline-extension/pull/5).
+  Thanks [hamidreza-ka](https://github.com/hamidreza-ka) for the contribution.
 
 ## 1.6
 
@@ -15,9 +16,9 @@
 ## 1.4
 
 - The configuration arguments are now optional, and they have followed default value:
-  - `baseline.output`: `PROJECT_DIR/test-baseline`
-  - `baseline.root`: `null` // disables message sanitization
-  - `baseline.record`: `false`
+    - `baseline.output`: `PROJECT_DIR/test-baseline`
+    - `baseline.root`: `null` // disables message sanitization
+    - `baseline.record`: `false`
 
 ## 1.3
 
