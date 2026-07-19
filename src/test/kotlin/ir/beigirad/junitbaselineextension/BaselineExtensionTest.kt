@@ -91,49 +91,4 @@ class BaselineExtensionTest {
             events.containerEvents().failed().count() shouldBe 0
         }
     }
-
-    @Test
-    fun `should not swallow failures when no baseline exists for class-level extension`() {
-        val events = EngineTestKit.engine("junit-jupiter")
-            .selectors(DiscoverySelectors.selectClass(SampleClassLevelTest::class.java))
-            .configurationParameter("baseline.root", rootPath.absolutePathString())
-            .configurationParameter("baseline.output", baselinePath.absolutePathString())
-            .execute()
-
-        withClue(events.containerEvents().debug()) {
-            events.containerEvents().failed().count() shouldBe 0
-        }
-
-        val failedTests = events.testEvents().failed().list()
-        failedTests.size shouldBe 2
-        failedTests.forEach { event ->
-            val throwable = event.getRequiredPayload(TestExecutionResult::class.java).throwable.get()
-            throwable.shouldBeInstanceOf<AssertionError>()
-            throwable.message.orEmpty() shouldContain "failure"
-        }
-
-        baselinePath.resolve("baseline-SampleClassLevelTest.json").exists() shouldBe false
-    }
-
-    @Test
-    fun `should not swallow failures when no baseline exists for method-level extension`() {
-        val events = EngineTestKit.engine("junit-jupiter")
-            .selectors(DiscoverySelectors.selectClass(SampleMethodLevelTest::class.java))
-            .configurationParameter("baseline.root", rootPath.absolutePathString())
-            .configurationParameter("baseline.output", baselinePath.absolutePathString())
-            .execute()
-
-        withClue(events.containerEvents().debug()) {
-            events.containerEvents().failed().count() shouldBe 0
-        }
-
-        val failedTests = events.testEvents().failed().list()
-        failedTests.size shouldBe 1
-        val throwable = failedTests.single().getRequiredPayload(TestExecutionResult::class.java).throwable.get()
-        throwable.shouldBeInstanceOf<AssertionError>()
-        throwable.message shouldBe "First failure"
-
-        val baselineFileName = "baseline-SampleMethodLevelTest-first.test.-218984446.json"
-        baselinePath.resolve(baselineFileName).exists() shouldBe false
-    }
 }

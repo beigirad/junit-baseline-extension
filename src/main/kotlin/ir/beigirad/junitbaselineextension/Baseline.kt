@@ -10,6 +10,7 @@ import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.createDirectories
+import kotlin.io.path.deleteIfExists
 import kotlin.io.path.exists
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
@@ -33,12 +34,14 @@ data class Baseline(
         failures[testId] = ExceptionWrapper(throwable)
     }
 
-    fun exists(): Boolean = getBaselineFile().exists()
-
     @TestOnly
     internal fun write() {
         val file = getBaselineFile()
         try {
+            if (failures.isEmpty()) {
+                file.deleteIfExists()
+                return
+            }
             baselineOutputParent.createDirectories() // make sure the parent exists
 
             val json = adapter.toJson(failures.mapValues { it.value.sanitizedMessages(projectRoot) })

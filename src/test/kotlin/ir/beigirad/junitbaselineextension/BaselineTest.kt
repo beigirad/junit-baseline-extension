@@ -61,6 +61,36 @@ class BaselineTest {
     }
 
     @Test
+    fun `write should skipped with empty failures`() {
+        val before = Baseline(identifier = "empty-test", projectRoot = rootDir, baselineOutputParent = baselineOutput)
+
+        val file = baselineOutput.resolve("baseline-empty-test.json")
+
+        before.write()
+        file.exists() shouldBe false
+    }
+
+    @Test
+    fun `write should delete baseline file with empty failures`() {
+        val testIdentifier = "my-test"
+
+        val before = Baseline(identifier = testIdentifier, projectRoot = rootDir, baselineOutputParent = baselineOutput)
+        before.recordFailure("test-1", Throwable("Error 1\nError 1 line2"))
+        before.recordFailure("test-2", Throwable("Error 2"))
+
+        val file = baselineOutput.resolve("baseline-my-test.json")
+
+        // create and verify baseline existence
+        before.write()
+        file.exists() shouldBe true
+
+        // verify its deletion
+        val after = Baseline(identifier = testIdentifier, projectRoot = rootDir, baselineOutputParent = baselineOutput)
+        after.write()
+        file.exists() shouldBe false
+    }
+
+    @Test
     fun `write should replace spaces with dashes in identifier`() {
         val baseline =
             Baseline(identifier = "my test identifier", projectRoot = rootDir, baselineOutputParent = baselineOutput)
@@ -70,23 +100,6 @@ class BaselineTest {
 
         val file = baselineOutput.resolve("baseline-my-test-identifier.json")
         file.exists() shouldBe true
-    }
-
-    @Test
-    fun `exists should return false when baseline file does not exist`() {
-        val baseline = Baseline("sample-identifier", projectRoot = rootDir, baselineOutputParent = baselineOutput)
-
-        baseline.exists() shouldBe false
-    }
-
-    @Test
-    fun `exists should return true after baseline file is written`() {
-        val baseline =
-            Baseline(identifier = "sample-identifier", projectRoot = rootDir, baselineOutputParent = baselineOutput)
-        baseline.recordFailure("test-1", Throwable("Error 1"))
-        baseline.write()
-
-        baseline.exists() shouldBe true
     }
 
     @Test

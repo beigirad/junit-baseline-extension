@@ -18,4 +18,9 @@ class SampleMethodLevelTest {
             throw AssertionError("Second failure")
         }
     }
+
+    @Test
+    @ExtendWith(BaselineExtension::class)
+    fun `passed test should not have any baseline`() {
+    }
 }

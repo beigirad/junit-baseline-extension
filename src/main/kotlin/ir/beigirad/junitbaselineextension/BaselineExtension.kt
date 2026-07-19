@@ -17,7 +17,6 @@ class BaselineExtension : TestExecutionExceptionHandler,
     BeforeEachCallback {
     private lateinit var baseline: Baseline
     private var isRecording: Boolean = false
-    private var hasBaseline: Boolean = false
 
     override fun beforeAll(context: ExtensionContext) {
         if (context.isNestedTestClass()) return
@@ -38,9 +37,6 @@ class BaselineExtension : TestExecutionExceptionHandler,
     }
 
     override fun handleTestExecutionException(context: ExtensionContext, throwable: Throwable) {
-        // without a baseline to compare against, behave as if the extension weren't applied
-        if (!isRecording && !hasBaseline) throw throwable
-
         // record test failures without throwing, for baseline comparison instead of `throw throwable`
         baseline.recordFailure(context.displayName, throwable)
     }
@@ -48,7 +44,6 @@ class BaselineExtension : TestExecutionExceptionHandler,
     override fun afterEach(context: ExtensionContext) {
         // ignore printing baseline when it applied by class (not by method!)
         if (context.isAppliedByClass()) return
-        if (!isRecording && !hasBaseline) return
 
         baseline.assertOrWrite(recordMode = isRecording)
     }
@@ -56,7 +51,6 @@ class BaselineExtension : TestExecutionExceptionHandler,
     override fun afterAll(context: ExtensionContext) {
         // avoid writing baselines for nested classes (they are handled in parent)
         if (context.isNestedTestClass()) return
-        if (!isRecording && !hasBaseline) return
 
         baseline.assertOrWrite(recordMode = isRecording)
     }
@@ -73,7 +67,6 @@ class BaselineExtension : TestExecutionExceptionHandler,
             projectRoot = baselineRoot?.let(::Path),
             baselineOutputParent = Path(baselineOutput)
         )
-        hasBaseline = baseline.exists()
     }
 
     private fun shortenMethodName(name: String) =
