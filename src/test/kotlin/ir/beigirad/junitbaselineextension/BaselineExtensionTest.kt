@@ -93,7 +93,7 @@ class BaselineExtensionTest {
     }
 
     @Test
-    fun `should propagate real exceptions and skip comparison when no baseline exists for class-level extension`() {
+    fun `should not swallow failures when no baseline exists for class-level extension`() {
         val events = EngineTestKit.engine("junit-jupiter")
             .selectors(DiscoverySelectors.selectClass(SampleClassLevelTest::class.java))
             .configurationParameter("baseline.root", rootPath.absolutePathString())
@@ -116,7 +116,7 @@ class BaselineExtensionTest {
     }
 
     @Test
-    fun `should propagate real exceptions and skip comparison when no baseline exists for method-level extension`() {
+    fun `should not swallow failures when no baseline exists for method-level extension`() {
         val events = EngineTestKit.engine("junit-jupiter")
             .selectors(DiscoverySelectors.selectClass(SampleMethodLevelTest::class.java))
             .configurationParameter("baseline.root", rootPath.absolutePathString())
